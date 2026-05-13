@@ -374,6 +374,8 @@ def main(args):
     global start_epoch, best_mAP
     global cls_token_num
     cls_token_num=args.cls_token_num 
+    args.img_w=args.width
+    args.img_h=args.height
     
     log_name='sysu_s2'   #model path########################################
     checkpoint = load_checkpoint(osp.join(args.logs_dir + '/' + log_name, 'model_best.pth.tar'))
@@ -408,7 +410,7 @@ def main(args):
     mode='all'
     print('==> Test with the best model: ',mode)
     
-    data_path='/scratch/chenjun3/liulekai/ADCA/data/sysu/'
+    data_path=args.data_dir
     query_img, query_label, query_cam = process_query_sysu(data_path, mode=mode)
     nquery = len(query_label)
     queryset = TestData(query_img, query_label, transform=transform_test, img_size=(args.img_w, args.img_h))
