@@ -375,7 +375,7 @@ def main(args):
     global cls_token_num
     cls_token_num=args.cls_token_num 
     
-    log_name='sysu_s2_basetokens4_AllMix0.4_RI0.1'   #model path########################################
+    log_name='sysu_s2'   #model path########################################
     checkpoint = load_checkpoint(osp.join(args.logs_dir + '/' + log_name, 'model_best.pth.tar'))
     
     #args.logs_dir = osp.join(args.logs_dir+'/'+log_name)
@@ -558,7 +558,7 @@ if __name__ == '__main__':
     parser.add_argument('--logs-dir', type=str, metavar='PATH',
                         default=osp.join(working_dir, 'logs'))
     parser.add_argument('--pooling-type', type=str, default='gem')
-    parser.add_argument('--use-hard', action="store_true")  # ÔÚÃüÁîĞĞ¼ÓÉÏ--use-hardÔòÎªtrue£¬²»¼ÓÔòÎªfalse£¬ÕâÀïÎªfalse
+    parser.add_argument('--use-hard', action="store_true")  # ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ğ¼ï¿½ï¿½ï¿½--use-hardï¿½ï¿½Îªtrueï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªfalseï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªfalse
     parser.add_argument('--no-cam',  action="store_true")
 
     parser.add_argument('--lamba-mate', type=float, default=0.1)  #########################

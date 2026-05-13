@@ -450,11 +450,11 @@ class TransReID(nn.Module):
 
         #################
         global_feats = b1_feat[:, :self.cls_token_num]  # [, 4, 768]
-        feats = [bottleneck(global_feats[:, i]) for i, bottleneck in enumerate(self.bottlenecks)]   # cls_num¸ö, [, 768]
+        feats = [bottleneck(global_feats[:, i]) for i, bottleneck in enumerate(self.bottlenecks)]   # cls_numï¿½ï¿½, [, 768]
         feats = torch.cat(feats, dim=1)         # [, 3072]
         if self.training:
             #cls_scores = [classifier(feats[i]) for i, classifier in enumerate(self.classifiers)]
-            SDC = [global_feats[:, i] for i in range(global_feats.shape[1])]   # cls_num¸ö, [, 768]
+            SDC = [global_feats[:, i] for i in range(global_feats.shape[1])]   # cls_numï¿½ï¿½, [, 768]
             return feats,feats[:single_size],feats[single_size:],[sdc[:single_size] for sdc in SDC],[sdc[single_size:] for sdc in SDC]
             #return feats,[feat[:single_size] for feat in feats],[feat[single_size:] for feat in feats],[sdc[:single_size] for sdc in SDC],[sdc[single_size:] for sdc in SDC]
         else:
