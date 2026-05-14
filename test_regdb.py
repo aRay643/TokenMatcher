@@ -237,9 +237,9 @@ def pairwise_distance(features_q, features_g):
 
 def process_test_regdb(img_dir, trial = 1, modal = 'visible'):
     if modal=='visible':
-        input_data_path = img_dir + 'idx/test_visible_{}'.format(trial) + '.txt'
+        input_data_path = img_dir + '/idx/test_visible_{}'.format(trial) + '.txt'
     elif modal=='thermal':
-        input_data_path = img_dir + 'idx/test_thermal_{}'.format(trial) + '.txt'
+        input_data_path = img_dir + '/idx/test_thermal_{}'.format(trial) + '.txt'
     
     with open(input_data_path) as f:
         data_file_list = open(input_data_path, 'rt').read().splitlines()
@@ -314,7 +314,7 @@ def eval_regdb(distmat, q_pids, g_pids, max_rank = 20):
     return all_cmc, mAP, mINP
 
 def main_worker(args):
-    log_name='regdb_s2_basetokens6_AC0.1'          #model path##########################################
+    log_name='regdb_s2'          #model path##########################################
     global cls_token_num
     cls_token_num=args.cls_token_num
     #model = create_model(args)
@@ -345,7 +345,8 @@ def main_worker(args):
 
         mode='visible to thermal'
         print(mode)
-        data_path='/scratch/chenjun3/liulekai/ADCA/data/regdb/'
+        # data_path='/scratch/chenjun3/liulekai/ADCA/data/regdb/'
+        data_path='/home/lr/code/dataset/VI-ReID/RegDB'
         query_img, query_label = process_test_regdb(data_path, trial=trial, modal='visible')
         gall_img, gall_label = process_test_regdb(data_path, trial=trial, modal='thermal')
 
@@ -405,7 +406,8 @@ def main_worker(args):
 
         mode='thermal to visible'
         print(mode)
-        data_path='/scratch/chenjun3/liulekai/ADCA/data/regdb/'
+        # data_path='/scratch/chenjun3/liulekai/ADCA/data/regdb/'
+        data_path='/home/lr/code/dataset/VI-ReID/RegDB'
         query_img, query_label = process_test_regdb(data_path, trial=trial, modal='thermal')
         gall_img, gall_label = process_test_regdb(data_path, trial=trial, modal='visible')
 
