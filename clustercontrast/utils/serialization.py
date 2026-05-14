@@ -37,7 +37,10 @@ def save_checkpoint35(state, is_best, fpath='checkpoint.pth.tar'):
 def load_checkpoint(fpath):
     if osp.isfile(fpath):
         # checkpoint = torch.load(fpath)
-        checkpoint = torch.load(fpath, map_location=torch.device('cpu'))
+        try:
+            checkpoint = torch.load(fpath, map_location=torch.device('cpu'), weights_only=False)
+        except TypeError:
+            checkpoint = torch.load(fpath, map_location=torch.device('cpu'))
         print("=> Loaded checkpoint '{}'".format(fpath))
         return checkpoint
     else:
