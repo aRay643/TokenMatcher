@@ -20,7 +20,7 @@ import torch.nn.functional as F
 from clustercontrast import datasets
 from clustercontrast import models
 from clustercontrast.models.cm import ClusterMemory
-from clustercontrast.trainers import ClusterContrastTrainer_camTokens
+# from clustercontrast.trainers import ClusterContrastTrainer_camTokens
 from clustercontrast.evaluators import Evaluator, extract_features
 from clustercontrast.utils.data import IterLoader
 from clustercontrast.utils.data import transforms as T
