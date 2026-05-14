@@ -570,4 +570,5 @@ if __name__ == '__main__':
     parser.add_argument('--k', type=float, default=0.9)
     parser.add_argument('--x', type=int, default=4)
     parser.add_argument('--lamba-k', type=int, default=2)
-    main()
+    args = parser.parse_args()
+    main(args)
