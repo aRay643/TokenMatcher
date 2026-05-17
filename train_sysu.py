@@ -412,7 +412,7 @@ def main():
     log_s1_name = 'sysu_s1'   
     log_s2_name = 'sysu_s2'
     main_worker_stage1(args,log_s1_name) # Stage 1
-    main_worker_stage2(args,log_s1_name,log_s2_name) # Stage 2
+    # main_worker_stage2(args,log_s1_name,log_s2_name) # Stage 2
 
 def main_worker_stage1(args,log_s1_name):
     print(log_s1_name)
