@@ -593,7 +593,7 @@ def main_worker_stage1(args,log_s1_name):
                 normalize,
             ])
             mode='all'
-            data_path='/scratch/chenjun3/liulekai/ADCA/data/sysu/'
+            data_path='/home/lr/code/dataset/VI-ReID/SYSU-MM01'
             query_img, query_label, query_cam = process_query_sysu(data_path, mode=mode)
             nquery = len(query_label)
             queryset = TestData(query_img, query_label, transform=transform_test, img_size=(args.img_w, args.img_h))
@@ -653,7 +653,7 @@ def main_worker_stage1(args,log_s1_name):
     model.load_state_dict(checkpoint['state_dict'])
 
     mode='all'
-    data_path='/scratch/chenjun3/liulekai/ADCA/data/sysu/'
+    data_path='/home/lr/code/dataset/VI-ReID/SYSU-MM01'
     query_img, query_label, query_cam = process_query_sysu(data_path, mode=mode)
     nquery = len(query_label)
     queryset = TestData(query_img, query_label, transform=transform_test, img_size=(args.img_w, args.img_h))
@@ -698,7 +698,7 @@ def main_worker_stage1(args,log_s1_name):
     checkpoint = load_checkpoint(osp.join(stage1_logs_dir, 'model_best.pth.tar'))
     model.load_state_dict(checkpoint['state_dict'])
     mode='indoor'
-    data_path='/scratch/chenjun3/liulekai/ADCA/data/sysu/'
+    data_path='/home/lr/code/dataset/VI-ReID/SYSU-MM01'
     query_img, query_label, query_cam = process_query_sysu(data_path, mode=mode)
     nquery = len(query_label)
     queryset = TestData(query_img, query_label, transform=transform_test, img_size=(args.img_w, args.img_h))
