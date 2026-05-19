@@ -48,6 +48,14 @@ import faiss
 from preprocess_vis import save_fixed_pid_preprocess_visualization
 
 
+def _resolve_vis_id(args):
+    return getattr(args, "vis_id", 0) if getattr(args, "vis_id", 0) > 0 else getattr(args, "vis_pid", 0)
+
+
+def _vis_stage_enabled(args, stage):
+    return _resolve_vis_id(args) > 0 and getattr(args, "vis_stage", "stage1") == stage
+
+
 def get_data(name, data_dir):
     root = osp.join(data_dir, name)
     dataset = datasets.create(name, root)
@@ -57,7 +65,8 @@ def get_train_loader_ir(args, dataset, height, width, batch_size, workers,
                      num_instances, iters, trainset=None, no_cam=False,train_transformer=None):
     
     train_set = sorted(dataset.train) if trainset is None else sorted(trainset)
-    if getattr(args, "vis_pid", 0) > 0 and getattr(args, "vis_stage", "") == "stage1":
+    vis_id = _resolve_vis_id(args)
+    if vis_id > 0 and _vis_stage_enabled(args, "stage1"):
         save_fixed_pid_preprocess_visualization(
             train_set,
             train_transformer,
@@ -65,7 +74,7 @@ def get_train_loader_ir(args, dataset, height, width, batch_size, workers,
             project="TokenMatcher",
             stage="stage1",
             modal="ir",
-            target_pid=args.vis_pid,
+            target_id=vis_id,
             target_camid=args.vis_camid,
             root=dataset.images_dir,
             seed=args.vis_seed,
@@ -91,7 +100,8 @@ def get_train_loader_color(args, dataset, height, width, batch_size, workers,
 
 
     train_set = sorted(dataset.train) if trainset is None else sorted(trainset)
-    if getattr(args, "vis_pid", 0) > 0 and getattr(args, "vis_stage", "") == "stage1":
+    vis_id = _resolve_vis_id(args)
+    if vis_id > 0 and _vis_stage_enabled(args, "stage1"):
         transform_for_vis = train_transformer
         if train_transformer1 is not None:
             transform_for_vis = (train_transformer, train_transformer1)
@@ -102,7 +112,7 @@ def get_train_loader_color(args, dataset, height, width, batch_size, workers,
             project="TokenMatcher",
             stage="stage1",
             modal="rgb",
-            target_pid=args.vis_pid,
+            target_id=vis_id,
             target_camid=args.vis_camid,
             root=dataset.images_dir,
             seed=args.vis_seed,
@@ -421,7 +431,7 @@ def main_worker_stage1(args,log_s1_name):
     start_epoch=0
     best_mAP=0
     stage1_logs_dir = osp.join(args.logs_dir+'/'+log_s1_name)
-    if getattr(args, "vis_pid", 0) > 0 and getattr(args, "vis_stage", "") == "stage1" and args.vis_save_dir is None:
+    if _vis_stage_enabled(args, "stage1") and args.vis_save_dir is None:
         args.vis_save_dir = osp.join(stage1_logs_dir, "vis")
     start_time = time.monotonic()
     # cudnn.benchmark = True
@@ -1417,8 +1427,10 @@ if __name__ == '__main__':
     parser.add_argument('--k', type=float, default=0.9)
     parser.add_argument('--x', type=int, default=4)
     parser.add_argument('--lamba-k', type=int, default=2)
-    parser.add_argument('--vis-pid', type=int, default=0)
-    parser.add_argument('--vis-camid', type=int, default=None)
+    parser.add_argument('--vis-id', '--vis_id', dest='vis_id', type=int, default=0,
+                        help="fixed original identity id to visualize during preprocessing")
+    parser.add_argument('--vis-pid', type=int, default=0, help="deprecated alias for --vis-id")
+    parser.add_argument('--vis-camid', '--vis_camid', dest='vis_camid', type=int, default=None)
     parser.add_argument('--vis-stage', type=str, default='stage1')
     parser.add_argument('--vis-seed', type=int, default=0)
     parser.add_argument('--vis-save-dir', type=str, default=None)

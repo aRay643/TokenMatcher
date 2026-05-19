@@ -74,27 +74,43 @@ def _extract_pid_cam_from_name(path: str) -> Tuple[Optional[int], Optional[int]]
 def _record_meta(record):
     if isinstance(record, (list, tuple)) and record:
         path = str(record[0])
-        pid, cam = _extract_pid_cam_from_name(path)
-        if pid is None and len(record) >= 2 and isinstance(record[1], (int, np.integer)):
-            pid = int(record[1])
+        name = osp.basename(path)
+        match = PID_CAM_RE.search(name)
+        if match is not None:
+            raw_id, cam = int(match.group("pid")), int(match.group("cam"))
+        else:
+            raw_id, cam = None, None
+        if raw_id is None and len(record) >= 2 and isinstance(record[1], (int, np.integer)):
+            raw_id = int(record[1])
         if cam is None and len(record) >= 3 and isinstance(record[2], (int, np.integer)):
             cam = int(record[2])
-        return path, pid, cam
+        if raw_id is None:
+            raw_id, _ = _extract_pid_cam_from_name(path)
+        return path, raw_id, cam
 
     path = str(record)
-    pid, cam = _extract_pid_cam_from_name(path)
-    return path, pid, cam
+    raw_id, cam = _extract_pid_cam_from_name(path)
+    return path, raw_id, cam
+
+
+def _record_sort_key(record):
+    path, raw_id, cam = _record_meta(record)
+    return (
+        raw_id if raw_id is not None else 10**12,
+        cam if cam is not None else 10**12,
+        str(path).replace("\\", "/"),
+    )
 
 
 def _select_record(
     records: Sequence,
-    target_pid: int,
+    target_id: int,
     target_camid: Optional[int] = None,
 ):
     candidates = []
     for record in records:
-        _, raw_pid, raw_camid = _record_meta(record)
-        if raw_pid != target_pid:
+        _, raw_id, raw_camid = _record_meta(record)
+        if raw_id != target_id:
             continue
         if target_camid is not None and raw_camid != target_camid:
             continue
@@ -103,7 +119,7 @@ def _select_record(
     if not candidates:
         return None
 
-    candidates = sorted(candidates, key=lambda item: _record_meta(item)[0])
+    candidates = sorted(candidates, key=_record_sort_key)
     return candidates[0]
 
 
@@ -173,27 +189,30 @@ def save_fixed_pid_preprocess_visualization(
     project: str,
     stage: str,
     modal: str,
-    target_pid: int,
+    target_pid: Optional[int] = None,
     target_camid: Optional[int] = None,
+    target_id: Optional[int] = None,
     root: Optional[str] = None,
     seed: Optional[int] = 0,
     mean: Sequence[float] = (0.485, 0.456, 0.406),
     std: Sequence[float] = (0.229, 0.224, 0.225),
 ):
-    """Save the raw and transformed views for one fixed pid."""
-    if target_pid is None or int(target_pid) <= 0:
+    """Save the raw and transformed views for one fixed original identity id."""
+    selected_id = target_id if target_id is not None else target_pid
+    if selected_id is None or int(selected_id) <= 0:
         return None
+    selected_id = int(selected_id)
 
-    record = _select_record(records, int(target_pid), target_camid)
+    record = _select_record(records, selected_id, target_camid)
     if record is None:
         print(
-            "[vis] {} {} {}: no sample found for pid={} camid={}".format(
-                project, stage, modal, target_pid, target_camid
+            "[vis] {} {} {}: no sample found for vis_id={} camid={}".format(
+                project, stage, modal, selected_id, target_camid
             )
         )
         return None
 
-    path, raw_pid, raw_camid = _record_meta(record)
+    path, raw_id, raw_camid = _record_meta(record)
     abs_path = _resolve_path(path, root)
     raw_img = Image.open(abs_path).convert("RGB")
     transformed = _apply_transforms(raw_img, transform, seed)
@@ -206,11 +225,11 @@ def save_fixed_pid_preprocess_visualization(
     project_name = _safe_component(project)
     stage_name = _safe_component(stage)
     modal_name = _safe_component(modal)
-    pid_name = "pid{:04d}".format(int(raw_pid) if raw_pid is not None and raw_pid >= 0 else int(target_pid))
+    pid_name = "pid{:04d}".format(int(raw_id) if raw_id is not None and raw_id >= 0 else selected_id)
     cam_name = "cam{}".format(raw_camid) if raw_camid is not None else "camx"
     base_dir = osp.join(save_dir, project_name, stage_name, modal_name, pid_name)
     os.makedirs(base_dir, exist_ok=True)
-    marker_path = osp.join(base_dir, ".done")
+    marker_path = osp.join(base_dir, ".done_{}".format(cam_name))
     if not _try_mark_done(marker_path):
         return None
 

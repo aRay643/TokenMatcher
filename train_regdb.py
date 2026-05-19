@@ -36,7 +36,25 @@ from torch.autograd import Variable
 import math
 from ChannelAug import ChannelAdap, ChannelAdapGray, ChannelRandomErasing,ChannelExchange,Gray
 from collections import Counter
+from preprocess_vis import save_fixed_pid_preprocess_visualization
 start_epoch = best_mAP = 0
+
+
+def _resolve_vis_id(args):
+    return getattr(args, "vis_id", 0) if getattr(args, "vis_id", 0) > 0 else getattr(args, "vis_pid", 0)
+
+
+def _current_vis_stage(args):
+    return getattr(args, "_vis_current_stage", getattr(args, "vis_stage", "stage1"))
+
+
+def _vis_stage_enabled(args):
+    return _resolve_vis_id(args) > 0 and getattr(args, "vis_stage", "stage1") == _current_vis_stage(args)
+
+
+def _vis_save_dir(args):
+    return getattr(args, "vis_save_dir", None) or osp.join(args.logs_dir, "vis")
+
 
 def get_data(name, data_dir,trial=0):
     root = osp.join(data_dir, name)
@@ -68,6 +86,20 @@ def get_train_loader_ir(args, dataset, height, width, batch_size, workers,
 
 
     train_set = sorted(dataset.train) if trainset is None else sorted(trainset)
+    vis_id = _resolve_vis_id(args)
+    if vis_id > 0 and _vis_stage_enabled(args):
+        save_fixed_pid_preprocess_visualization(
+            train_set,
+            train_transformer,
+            save_dir=_vis_save_dir(args),
+            project="TokenMatcher",
+            stage=_current_vis_stage(args),
+            modal="ir",
+            target_id=vis_id,
+            target_camid=args.vis_camid,
+            root=dataset.images_dir,
+            seed=args.vis_seed,
+        )
     rmgs_flag = num_instances > 0
     if rmgs_flag:
         if no_cam:
@@ -89,6 +121,23 @@ def get_train_loader_color(args, dataset, height, width, batch_size, workers,
 
 
     train_set = sorted(dataset.train) if trainset is None else sorted(trainset)
+    vis_id = _resolve_vis_id(args)
+    if vis_id > 0 and _vis_stage_enabled(args):
+        transform_for_vis = train_transformer
+        if train_transformer1 is not None:
+            transform_for_vis = (train_transformer, train_transformer1)
+        save_fixed_pid_preprocess_visualization(
+            train_set,
+            transform_for_vis,
+            save_dir=_vis_save_dir(args),
+            project="TokenMatcher",
+            stage=_current_vis_stage(args),
+            modal="rgb",
+            target_id=vis_id,
+            target_camid=args.vis_camid,
+            root=dataset.images_dir,
+            seed=args.vis_seed,
+        )
     rmgs_flag = num_instances > 0
     if rmgs_flag:
         if no_cam:
@@ -336,6 +385,7 @@ def main():
 
 
 def main_worker_stage1(args,log_s1_name):
+    args._vis_current_stage = "stage1"
     logs_dir_root = osp.join(args.logs_dir+'/'+log_s1_name)
     trial = args.trial
     global cls_token_num
@@ -567,6 +617,7 @@ def main_worker_stage1(args,log_s1_name):
 
 
 def main_worker_stage2(args,log_s1_name,log_s2_name):
+    args._vis_current_stage = "stage2"
     print(log_s2_name)
     global cls_token_num
     cls_token_num=args.cls_token_num
@@ -1066,5 +1117,12 @@ if __name__ == '__main__':
     parser.add_argument('--k', type=float, default=0.9)
     parser.add_argument('--x', type=int, default=6)
     parser.add_argument('--lamba-k', type=int, default=2)
+    parser.add_argument('--vis-id', '--vis_id', dest='vis_id', type=int, default=0,
+                        help="fixed original identity id to visualize during preprocessing")
+    parser.add_argument('--vis-pid', type=int, default=0, help="deprecated alias for --vis-id")
+    parser.add_argument('--vis-camid', '--vis_camid', dest='vis_camid', type=int, default=None)
+    parser.add_argument('--vis-stage', type=str, default='stage1')
+    parser.add_argument('--vis-seed', type=int, default=0)
+    parser.add_argument('--vis-save-dir', type=str, default=None)
 
     main()
